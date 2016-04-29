@@ -13,3 +13,6 @@
 [submodule "others/plong"]
 	path = others/plong
 	url = https://gitlab.com/dto/plong.git
+[submodule "others/4x0ng"]
+	path = others/4x0ng
+	url = https://gitlab.com/dto/4x0ng.git

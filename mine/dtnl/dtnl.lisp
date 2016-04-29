@@ -14,7 +14,8 @@
 (defun units (n) (* *unit* n))
 
 ;; resources
-(defresource "unknown-flower.wav" :volume 20)
+(defresource "unknown-flower.wav" :volume 2)
+(defresource "bip.wav" :volume 20)
 
 (defparameter *play-ground-image* "play-ground.png")
 (defparameter *eva-image* "eva.png")
@@ -23,7 +24,9 @@
 
 ;; game logic
 (defclass world (buffer)
-  ((background-image :initform *play-ground-image*)
+  (
+   ;; (background-image :initform *play-ground-image*)
+   (background-color :initform "white")
    (width :initform *width*)
    (height :initform *height*)
    (eva :initform (make-instance 'eva))))
@@ -37,9 +40,47 @@
   (with-slots (heading speed) eva
     (let ((head (find-direction)))
       (when head
-        (setf speed 1)
+        (setf speed 5)
         (setf heading (direction-heading head)))
       (move eva heading speed))))
+
+(defclass wall (node)
+  ((color :initform "gray50")))
+
+(defmethod collide ((eva eva)
+                    (wall wall))
+  (with-slots (heading speed) eva
+    (move eva (opposite-heading heading) (* speed 2))
+    ;; (format t "~&heading: ~S" heading)
+    (setf heading (opposite-heading heading))))
+
+(defmethod collide :after ((eva eva)
+                           (wall wall))
+  (play-sample "bip.wav"))
+
+(defun make-wall (x y width height)
+  (let ((wall (make-instance 'wall)))
+    (resize wall width height)
+    (move-to wall x y)
+    wall))
+
+(defun make-border (x y width height)
+  (let ((left x)
+        (top y)
+        (right (+ x width))
+        (bottom (+ y height)))
+    (with-new-buffer
+      ;; top
+      (insert (make-wall left top width (units 1)))
+      ;; bottom
+      (insert (make-wall left (- bottom (units 1)) width (units 1)))
+      ;; left
+      ;; (insert (make-wall left (+ top (units 1))
+      ;;                    (units 1) (- height (units 2))))
+      ;; right
+      ;; (insert (make-wall (- right (units 1)) (+ top (units 1))
+      ;;                    (units 1) (- height (units 2))))
+      (current-buffer))))
 
 (defun holding-down-arraw ()
   (keyboard-down-p :down))
@@ -66,7 +107,9 @@
 (defmethod start-game ((world world))
   (with-slots (eva) world
     (with-buffer world
-      (insert eva))))
+      (insert eva)
+      (move-to eva (/ *width* 2) (/ *height* 2))
+      (paste world (make-border 0 0 *width* *height*)))))
 
 (defun dtnl ()
   (setf *screen-height* *height*)
