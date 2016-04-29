@@ -1,0 +1,15 @@
+[submodule "others/1x0ng"]
+	path = others/1x0ng
+	url = https://gitlab.com/dto/1x0ng.git
+[submodule "others/2fr0g"]
+	path = others/2fr0g
+	url = https://gitlab.com/dto/2fr0g.git
+[submodule "others/xelf"]
+	path = others/xelf
+	url = https://gitlab.com/dto/xelf.git
+[submodule "others/3x0ng"]
+	path = others/3x0ng
+	url = https://gitlab.com/dto/3x0ng.git
+[submodule "others/plong"]
+	path = others/plong
+	url = https://gitlab.com/dto/plong.git
