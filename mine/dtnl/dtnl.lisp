@@ -24,9 +24,7 @@
 
 ;; game logic
 (defclass world (buffer)
-  (
-   (background-image :initform *play-ground-image*)
-   ;; (background-color :initform "white")
+  ((background-image :initform *play-ground-image*)
    (width :initform *width*)
    (height :initform *height*)
    (eva :initform (make-instance 'eva))))
