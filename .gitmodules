@@ -16,3 +16,6 @@
 [submodule "others/4x0ng"]
 	path = others/4x0ng
 	url = https://gitlab.com/dto/4x0ng.git
+[submodule "others/wizl0rd"]
+	path = others/wizl0rd
+	url = git@gitlab.com:dto/wizl0rd.git
