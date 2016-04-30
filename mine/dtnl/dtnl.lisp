@@ -14,7 +14,7 @@
 (defun units (n) (* *unit* n))
 
 ;; resources
-(defresource "unknown-flower.wav" :volume 2)
+(defresource "unknown-flower.wav" :volume 20)
 (defresource "bip.wav" :volume 20)
 
 (defparameter *play-ground-image* "play-ground.png")
@@ -42,7 +42,8 @@
       (when head
         (setf speed 5)
         (setf heading (direction-heading head)))
-      (move eva heading speed))))
+      (move eva heading speed))
+    ))
 
 (defclass wall (node)
   ((color :initform "gray50")))
@@ -50,9 +51,13 @@
 (defmethod collide ((eva eva)
                     (wall wall))
   (with-slots (heading speed) eva
-    (move eva (opposite-heading heading) (* speed 2))
+    (move eva (opposite-heading heading) speed)
+    ;; (aim eva (direction-heading :down))
+    (aim eva (opposite-heading heading))
     ;; (format t "~&heading: ~S" heading)
-    (setf heading (opposite-heading heading))))
+    ;; (setf heading (opposite-heading))
+    ;; (setf speed (* speed 2))
+    ))
 
 (defmethod collide :after ((eva eva)
                            (wall wall))
@@ -70,17 +75,19 @@
         (right (+ x width))
         (bottom (+ y height)))
     (with-new-buffer
-      ;; top
-      (insert (make-wall left top width (units 1)))
-      ;; bottom
-      (insert (make-wall left (- bottom (units 1)) width (units 1)))
-      ;; left
-      ;; (insert (make-wall left (+ top (units 1))
-      ;;                    (units 1) (- height (units 2))))
-      ;; right
-      ;; (insert (make-wall (- right (units 1)) (+ top (units 1))
-      ;;                    (units 1) (- height (units 2))))
-      (current-buffer))))
+        ;; top
+        ;; (insert (make-wall left (+ top (units 6)) width (units 1)))
+        (insert (make-wall left top
+                           (- right left) (units 1)))
+        ;; bottom
+        ;; (insert (make-wall left (- bottom (units 1)) width (units 1)))
+        ;; left
+        ;; (insert (make-wall left (+ top (units 1))
+        ;;                    (units 1) (- height (units 2))))
+        ;; right
+        ;; (insert (make-wall (- right (units 1)) (+ top (units 1))
+        ;;                    (units 1) (- height (units 2))))
+        (current-buffer))))
 
 (defun holding-down-arraw ()
   (keyboard-down-p :down))
@@ -109,7 +116,9 @@
     (with-buffer world
       (insert eva)
       (move-to eva (/ *width* 2) (/ *height* 2))
-      (paste world (make-border 0 0 *width* *height*)))))
+      (paste world (make-border 0 0
+                                (- *width* (units 1))
+                                (- *height* (units 1)))))))
 
 (defun dtnl ()
   (setf *screen-height* *height*)
