@@ -21,6 +21,7 @@
 (defparameter *eva-image* "eva.png")
 (defparameter *tom-image* "tom.png")
 (defparameter *bullet-image* "bullet.png")
+(defparameter *tom-bullet-image* "tom-bullet.png")
 
 ;; game logic
 
@@ -41,6 +42,13 @@
    (heading :initform nil
             :initarg :heading)
    (frame-clock :initform 100)))
+
+(defclass tom-bullet (node)
+  ((image :initform *tom-bullet-image*)
+   (speed :initform 10)
+   (heading :initform (nth (random (length *directions*))
+                           *directions*)
+            :initarg :heading)))
 
 (defclass eva (node)
   ((image :initform *eva-image*)
@@ -95,6 +103,14 @@
           ((> y *height*)
            (move-to bullet x 0)))))
 
+(defmethod update ((tom-bullet tom-bullet))
+  (with-slots (heading speed) tom-bullet
+    (move tom-bullet heading speed)))
+
+(defmethod update ((tom tom))
+  (percent-of-time 1
+                   (tom-fire-bullet tom)))
+
 ;; ====================
 
 ;; collide methods
@@ -142,6 +158,10 @@
                            (bullet bullet))
   (play-sample "bip.wav"))
 
+(defmethod collide ((tom-bullet tom-bullet)
+                    (wall wall))
+  (destroy tom-bullet))
+
 ;; ====================
 
 ;; (defmethod collide ((eva eva)
@@ -161,6 +181,16 @@
                 (make-instance 'bullet :heading heading)
                 x y))))
 
+(defmethod tom-fire-bullet ((tom tom))
+  (with-slots (x y) tom
+    (let ((direction (nth (random (length *directions*))
+                          *directions*)))
+      (choose-tom-bullet-image (direction-heading direction))
+      (add-node (current-buffer)
+                (make-instance 'tom-bullet
+                               :heading (direction-heading direction))
+                x y))))
+
 (defun choose-bullet-image (heading)
   (setf *bullet-image*
         (case (heading-direction heading)
@@ -172,6 +202,18 @@
           (:downleft "bullet-downleft.png")
           (:upright "bullet-upright.png")
           (:upleft "bullet-upleft.png"))))
+
+(defun choose-tom-bullet-image (heading)
+  (setf *tom-bullet-image*
+        (case (heading-direction heading)
+          (:up "tom-bullet-up.png")
+          (:down "tom-bullet-down.png")
+          (:left "tom-bullet-left.png")
+          (:right "tom-bullet-right.png")
+          (:downright "tom-bullet-downright.png")
+          (:downleft "tom-bullet-downleft.png")
+          (:upright "tom-bullet-upright.png")
+          (:upleft "tom-bullet-upleft.png"))))
 
 (defun make-wall (x y width height)
   (let ((wall (make-instance 'wall)))
