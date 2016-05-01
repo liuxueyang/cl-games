@@ -23,19 +23,39 @@
 (defparameter *bullet-image* "bullet.png")
 
 ;; game logic
+
+;; class definitions
 (defclass world (buffer)
   ((background-image :initform *play-ground-image*)
    (width :initform *width*)
    (height :initform *height*)
    (eva :initform (make-instance 'eva))))
 
+(defclass tom (node)
+  ((image :initform *tom-image*)
+   (speed :initform 5)))
+
+(defclass bullet (node)
+  ((image :initform *bullet-image*)
+   (speed :initform 14)
+   (heading :initform nil
+            :initarg :heading)
+   (frame-clock :initform 100)))
+
 (defclass eva (node)
   ((image :initform *eva-image*)
    (speed :initform 0)
    (heading :initform (direction-heading :down))))
 
+(defclass wall (node)
+  ((color :initform "gray50")))
+
+;; ====================
+
 (defun eva ()
   (slot-value (current-buffer) 'eva))
+
+;; update method of classes.
 
 (defmethod update ((eva eva))
   (with-slots (heading speed x y) eva
@@ -59,13 +79,6 @@
           (setf heading (opposite-heading heading)))
         (call-next-method))))
 
-(defclass bullet (node)
-  ((image :initform *bullet-image*)
-   (speed :initform 10)
-   (heading :initform nil
-            :initarg :heading)
-   (frame-clock :initform 100)))
-
 (defmethod update ((bullet bullet))
   (with-slots (heading speed frame-clock) bullet
     (move bullet heading speed)
@@ -82,26 +95,16 @@
           ((> y *height*)
            (move-to bullet x 0)))))
 
-(defclass tom (node)
-  ((image :initform *tom-image*)
-   (speed :initform 5)))
+;; ====================
 
-(defclass wall (node)
-  ((color :initform "gray50")))
-
-;; (defmethod collide ((eva eva)
-;;                     (wall wall))
-;;   (with-slots (heading speed x y) eva
-;;     (move eva (opposite-heading heading) (* 2 speed))
-;;     (aim eva (opposite-heading heading))
-;;     (setf heading (opposite-heading heading))
-;;     ;; (format t "~&x: ~S, y: ~S" x y)
-;;     ))
+;; collide methods
 
 (defmethod collide ((tom tom)
                     (bullet bullet))
-  (remove-node (current-buffer) tom)
-  (remove-node (current-buffer) bullet)
+  ;; (remove-node (current-buffer) tom)
+  ;; (remove-node (current-buffer) bullet)
+  (destroy tom)
+  (destroy bullet)
   (play-sample "bip.wav"))
 
 (defmethod collide ((bullet1 bullet)
@@ -139,6 +142,17 @@
                            (bullet bullet))
   (play-sample "bip.wav"))
 
+;; ====================
+
+;; (defmethod collide ((eva eva)
+;;                     (wall wall))
+;;   (with-slots (heading speed x y) eva
+;;     (move eva (opposite-heading heading) (* 2 speed))
+;;     (aim eva (opposite-heading heading))
+;;     (setf heading (opposite-heading heading))
+;;     ;; (format t "~&x: ~S, y: ~S" x y)
+;;     ))
+
 (defmethod fire-bullet ((eva eva))
   (when (holding-lshift)
     (with-slots (x y heading) eva
@@ -153,7 +167,11 @@
           (:up "bullet-up.png")
           (:down "bullet-down.png")
           (:left "bullet-left.png")
-          (:right "bullet-right.png"))))
+          (:right "bullet-right.png")
+          (:downright "bullet-downright.png")
+          (:downleft "bullet-downleft.png")
+          (:upright "bullet-upright.png")
+          (:upleft "bullet-upleft.png"))))
 
 (defun make-wall (x y width height)
   (let ((wall (make-instance 'wall)))
@@ -184,9 +202,13 @@
   (with-new-buffer
       (dotimes (i 5)
         (let ((tom (make-instance 'tom)))
-          (move-to tom (random *width*) (random *height*))
+          (move-to tom
+                   (random (- *width* (units 2)))
+                   (random (- *height* (units 2))))
           (insert tom)))
     (current-buffer)))
+
+;; keyboard control functions.
 
 (defun holding-down-arraw ()
   (keyboard-down-p :down))
@@ -200,6 +222,22 @@
 (defun holding-right-arraw ()
   (keyboard-down-p :right))
 
+(defun holding-down-left-arraw ()
+  (and (keyboard-down-p :down)
+       (keyboard-down-p :left)))
+
+(defun holding-down-right-arraw ()
+  (and (keyboard-down-p :down)
+       (keyboard-down-p :right)))
+
+(defun holding-up-left-arraw ()
+  (and (keyboard-down-p :up)
+       (keyboard-down-p :left)))
+
+(defun holding-up-right-arraw ()
+  (and (keyboard-down-p :up)
+       (keyboard-down-p :right)))
+
 (defun holding-escape ()
   (keyboard-down-p :escape))
 
@@ -207,11 +245,16 @@
   (keyboard-pressed-p :lshift))
 
 (defun find-direction ()
-  (cond ((holding-up-arraw) :up)
+  (cond ((holding-down-left-arraw) :downleft)
+        ((holding-down-right-arraw) :downright)
+        ((holding-up-left-arraw) :upleft)
+        ((holding-up-right-arraw) :upright)
+        ((holding-up-arraw) :up)
         ((holding-down-arraw) :down)
         ((holding-left-arraw) :left)
         ((holding-right-arraw) :right)
         ((holding-escape) (quit))))
+;; ====================
 
 (defmethod start-game ((world world))
   (with-slots (eva) world
