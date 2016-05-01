@@ -34,7 +34,11 @@
 
 (defclass tom (node)
   ((image :initform *tom-image*)
-   (speed :initform 5)))
+   (speed :initform 3)
+   (heading :initform (direction-heading
+                       (nth (random (length *directions*))
+                            *directions*))
+            :initarg :heading)))
 
 (defclass bullet (node)
   ((image :initform *bullet-image*)
@@ -109,7 +113,9 @@
 
 (defmethod update ((tom tom))
   (percent-of-time 1
-                   (tom-fire-bullet tom)))
+                   (tom-fire-bullet tom))
+  (with-slots (heading speed) tom
+    (move tom heading speed)))
 
 ;; ====================
 
@@ -122,6 +128,13 @@
   (destroy tom)
   (destroy bullet)
   (play-sample "bip.wav"))
+
+(defmethod collide ((tom tom)
+                    (wall wall))
+  (with-slots (heading speed) tom
+    (setf heading (opposite-heading heading))
+    (move tom heading speed)
+    (format t "~&heading : ~S" heading)))
 
 (defmethod collide ((bullet1 bullet)
                     (bullet2 bullet))
@@ -303,7 +316,7 @@
     (with-buffer world
       (insert eva)
       (move-to eva (/ *width* 2) (/ *height* 2))
-      ;; (paste world (make-border 0 0 *width* *height*))
+      (paste world (make-border 0 0 *width* *height*))
       (paste world (generate-tom)))))
 
 (defun dtnl ()
