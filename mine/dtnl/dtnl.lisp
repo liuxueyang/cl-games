@@ -38,7 +38,7 @@
   (slot-value (current-buffer) 'eva))
 
 (defmethod update ((eva eva))
-  (with-slots (heading speed) eva
+  (with-slots (heading speed x y) eva
     (let ((head (find-direction)))
       (when head
         (setf speed 5)
@@ -46,19 +46,57 @@
         (move eva heading speed))))
   (fire-bullet eva))
 
+(defmethod update :around ((eva eva))
+  (with-slots (heading speed x y) eva
+    (if (or (< x (units 1))
+            (< y (units 1))
+            ;; this works. however, i don't know why. ;-)
+            (> (+ x (image-width *eva-image*)) (- *width* (units 2)))
+            (> (+ y (image-height *eva-image*)) (- *height* (units 2))))
+        (progn
+          (move eva (opposite-heading heading) (* 2 speed))
+          (aim eva (opposite-heading heading))
+          (setf heading (opposite-heading heading)))
+        (call-next-method))))
+
 (defclass bullet (node)
   ((image :initform *bullet-image*)
    (speed :initform 10)
    (heading :initform nil
-            :initarg :heading)))
+            :initarg :heading)
+   (frame-clock :initform 100)))
 
 (defmethod update ((bullet bullet))
-  (with-slots (heading speed) bullet
-    (move bullet heading speed)))
+  (with-slots (heading speed frame-clock) bullet
+    (move bullet heading speed)
+    (decf frame-clock)
+    (unless (plusp frame-clock)
+      (remove-node (current-buffer) bullet)))
+  (with-slots (x y) bullet
+    (cond ((< x 0)
+           (move-to bullet *width* y))
+          ((> x *width*)
+           (move-to bullet 0 y))
+          ((< y 0)
+           (move-to bullet x *height*))
+          ((> y *height*)
+           (move-to bullet x 0)))))
 
 (defclass tom (node)
   ((image :initform *tom-image*)
    (speed :initform 5)))
+
+(defclass wall (node)
+  ((color :initform "gray50")))
+
+;; (defmethod collide ((eva eva)
+;;                     (wall wall))
+;;   (with-slots (heading speed x y) eva
+;;     (move eva (opposite-heading heading) (* 2 speed))
+;;     (aim eva (opposite-heading heading))
+;;     (setf heading (opposite-heading heading))
+;;     ;; (format t "~&x: ~S, y: ~S" x y)
+;;     ))
 
 (defmethod collide ((tom tom)
                     (bullet bullet))
@@ -66,22 +104,39 @@
   (remove-node (current-buffer) bullet)
   (play-sample "bip.wav"))
 
-(defclass wall (node)
-  ((color :initform "gray50")))
+(defmethod collide ((bullet1 bullet)
+                    (bullet2 bullet))
+  (play-sample "bip.wav")
+  (destroy bullet1)
+  (destroy bullet2)
+  ;; (remove-node (current-buffer) bullet1)
+  ;; (remove-node (current-buffer) bullet2)
+  )
 
-(defmethod collide ((eva eva)
-                    (wall wall))
-  (with-slots (heading speed) eva
-    (move eva (opposite-heading heading) (* 2 speed))
-    (aim eva (opposite-heading heading))
-    (setf heading (opposite-heading heading))))
+;; (defmethod collide ((eva eva)
+;;                     (bullet bullet))
+;;   (with-slots (frame-clock) bullet
+;;     (when (< frame-clock 90)
+;;       (remove-node (current-buffer) eva)
+;;       (remove-node (current-buffer) bullet)
+;;       (play-sample "bip.wav"))))
 
-(defmethod collide ((bullet bullet)
-                    (wall wall))
-  (remove-node (current-buffer) bullet))
+;; (defmethod collide ((bullet bullet)
+;;                     (wall wall))
+;;   (with-slots (x y) bullet
+;;     (cond ((< x 0)
+;;            (move-to bullet *width* y))
+;;           ((> x *width*)
+;;            (move-to bullet 0 y))
+;;           ((< y 0)
+;;            (move-to bullet x *height*))
+;;           ((> y *height*)
+;;            (move-to bullet x 0))))
+;;   ;; (remove-node (current-buffer) bullet)
+;;   )
 
-(defmethod collide :after ((eva eva)
-                           (wall wall))
+(defmethod collide :after ((tom tom)
+                           (bullet bullet))
   (play-sample "bip.wav"))
 
 (defmethod fire-bullet ((eva eva))
@@ -93,11 +148,12 @@
                 x y))))
 
 (defun choose-bullet-image (heading)
-  (case (heading-direction heading)
-    (:up (setf *bullet-image* "bullet-up.png"))
-    (:down (setf *bullet-image* "bullet-down.png"))
-    (:left (setf *bullet-image* "bullet-left.png"))
-    (:right (setf *bullet-image* "bullet-right.png"))))
+  (setf *bullet-image*
+        (case (heading-direction heading)
+          (:up "bullet-up.png")
+          (:down "bullet-down.png")
+          (:left "bullet-left.png")
+          (:right "bullet-right.png"))))
 
 (defun make-wall (x y width height)
   (let ((wall (make-instance 'wall)))
@@ -112,15 +168,16 @@
         (bottom (+ y height)))
     (with-new-buffer
         ;; top
-        (insert (make-wall left top (- right left) (units 0.5)))
+        (insert (make-wall left top
+                           (- right left) (units 0.1)))
       ;; bottom
-      (insert (make-wall left (- bottom (units 0.5))
-                         width (units 0.5)))
+      (insert (make-wall left (- bottom (units 0.1))
+                         width (units 0.1)))
       ;; left
-      (insert (make-wall left top (units 0.5) height))
+      (insert (make-wall left top (units 0.1) height))
       ;; right
-      (insert (make-wall (- right (units 0.5)) top
-                         (units 0.5) height))
+      (insert (make-wall (- right (units 0.1)) top
+                         (units 0.1) height))
       (current-buffer))))
 
 (defun generate-tom ()
@@ -161,7 +218,7 @@
     (with-buffer world
       (insert eva)
       (move-to eva (/ *width* 2) (/ *height* 2))
-      (paste world (make-border 0 0 *width* *height*))
+      ;; (paste world (make-border 0 0 *width* *height*))
       (paste world (generate-tom)))))
 
 (defun dtnl ()
