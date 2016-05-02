@@ -34,10 +34,9 @@
 
 (defclass tom (node)
   ((image :initform *tom-image*)
-   (speed :initform 3)
+   (speed :initform 1)
    (heading :initform (direction-heading
-                       (nth (random (length *directions*))
-                            *directions*))
+                       (random-choose *directions*))
             :initarg :heading)))
 
 (defclass bullet (node)
@@ -48,8 +47,11 @@
    (frame-clock :initform 100)))
 
 (defclass tom-bullet (node)
-  ((image :initform *tom-bullet-image*)
-   (speed :initform 10)
+  ( ;; (image :initform *tom-bullet-image*)
+   (speed :initform 7)
+   (width :initform 7)
+   (height :initform 7)
+   (color :initform "white")
    (heading :initform (nth (random (length *directions*))
                            *directions*)
             :initarg :heading)))
@@ -115,7 +117,11 @@
   (percent-of-time 1
                    (tom-fire-bullet tom))
   (with-slots (heading speed) tom
-    (move tom heading speed)))
+    (move tom heading speed)
+    (percent-of-time 0.5
+                     (setf heading
+                           (direction-heading
+                            (random-choose *directions*))))))
 
 ;; ====================
 
@@ -127,23 +133,24 @@
   ;; (remove-node (current-buffer) bullet)
   (destroy tom)
   (destroy bullet)
-  (play-sample "bip.wav"))
+  (play-sample "bip.wav")
+  (let ((tom (make-instance 'tom)))
+    (move-to tom
+             (random (- *width* (units 2)))
+             (random (- *height* (units 2))))
+    (insert tom)))
 
 (defmethod collide ((tom tom)
                     (wall wall))
   (with-slots (heading speed) tom
     (setf heading (opposite-heading heading))
-    (move tom heading speed)
-    (format t "~&heading : ~S" heading)))
+    (move tom heading speed)))
 
 (defmethod collide ((bullet1 bullet)
                     (bullet2 bullet))
   (play-sample "bip.wav")
   (destroy bullet1)
-  (destroy bullet2)
-  ;; (remove-node (current-buffer) bullet1)
-  ;; (remove-node (current-buffer) bullet2)
-  )
+  (destroy bullet2))
 
 ;; (defmethod collide ((eva eva)
 ;;                     (bullet bullet))
@@ -198,7 +205,7 @@
   (with-slots (x y) tom
     (let ((direction (nth (random (length *directions*))
                           *directions*)))
-      (choose-tom-bullet-image (direction-heading direction))
+      ;; (choose-tom-bullet-image (direction-heading direction))
       (add-node (current-buffer)
                 (make-instance 'tom-bullet
                                :heading (direction-heading direction))
