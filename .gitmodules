@@ -19,3 +19,6 @@
 [submodule "others/wizl0rd"]
 	path = others/wizl0rd
 	url = git@gitlab.com:dto/wizl0rd.git
+[submodule "others/jam"]
+	path = others/jam
+	url = git@gitlab.com:dto/jam.git
