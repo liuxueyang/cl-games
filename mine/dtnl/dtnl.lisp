@@ -270,50 +270,23 @@ object is an string, the name of the object"
 
 ;; keyboard control functions.
 
-(defun holding-down-arraw ()
-  (keyboard-down-p :down))
-
-(defun holding-up-arraw ()
-  (keyboard-down-p :up))
-
-(defun holding-left-arraw ()
-  (keyboard-down-p :left))
-
-(defun holding-right-arraw ()
-  (keyboard-down-p :right))
-
-(defun holding-down-left-arraw ()
-  (and (keyboard-down-p :down)
-       (keyboard-down-p :left)))
-
-(defun holding-down-right-arraw ()
-  (and (keyboard-down-p :down)
-       (keyboard-down-p :right)))
-
-(defun holding-up-left-arraw ()
-  (and (keyboard-down-p :up)
-       (keyboard-down-p :left)))
-
-(defun holding-up-right-arraw ()
-  (and (keyboard-down-p :up)
-       (keyboard-down-p :right)))
-
-(defun holding-escape ()
-  (keyboard-down-p :escape))
-
 (defun holding-lshift ()
   (keyboard-pressed-p :lshift))
 
+(defmacro monitor-keyboard (&rest keys)
+  `(and ,@(loop for key in keys collect `(keyboard-down-p ,key))))
+
 (defun find-direction ()
-  (cond ((holding-down-left-arraw) :downleft)
-        ((holding-down-right-arraw) :downright)
-        ((holding-up-left-arraw) :upleft)
-        ((holding-up-right-arraw) :upright)
-        ((holding-up-arraw) :up)
-        ((holding-down-arraw) :down)
-        ((holding-left-arraw) :left)
-        ((holding-right-arraw) :right)
-        ((holding-escape) (quit))))
+  (cond ((monitor-keyboard :down :left) :downleft)
+        ((monitor-keyboard :down :right):downright)
+        ((monitor-keyboard :up :left) :upleft)
+        ((monitor-keyboard :up :right) :upright)
+        ((monitor-keyboard :up) :up)
+        ((monitor-keyboard :down) :down)
+        ((monitor-keyboard :left) :left)
+        ((monitor-keyboard :right) :right)
+        ((monitor-keyboard :escape) (quit))))
+
 ;; ====================
 
 (defmethod start-game ((world world))
