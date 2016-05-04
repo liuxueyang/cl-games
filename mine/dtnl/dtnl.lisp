@@ -212,28 +212,24 @@
                 x y))))
 
 (defun choose-bullet-image (heading)
-  (setf *bullet-image*
-        (case (heading-direction heading)
-          (:up "bullet-up.png")
-          (:down "bullet-down.png")
-          (:left "bullet-left.png")
-          (:right "bullet-right.png")
-          (:downright "bullet-downright.png")
-          (:downleft "bullet-downleft.png")
-          (:upright "bullet-upright.png")
-          (:upleft "bullet-upleft.png"))))
+  (choose-image *bullet-image* "bullet" heading))
 
 (defun choose-tom-bullet-image (heading)
-  (setf *tom-bullet-image*
-        (case (heading-direction heading)
-          (:up "tom-bullet-up.png")
-          (:down "tom-bullet-down.png")
-          (:left "tom-bullet-left.png")
-          (:right "tom-bullet-right.png")
-          (:downright "tom-bullet-downright.png")
-          (:downleft "tom-bullet-downleft.png")
-          (:upright "tom-bullet-upright.png")
-          (:upleft "tom-bullet-upleft.png"))))
+  (choose-image *tom-bullet-image* "tom-bullet" heading))
+
+(defmacro choose-image (var object heading)
+  "var is the variable to set, object is the object name of
+string type, heading is the object slot."
+  `(setf ,var
+         ,(direction-2-image-name (heading-direction heading)
+                                  object)))
+
+(defmacro direction-2-image-name (direction object)
+  "direction is a keyword, object is an string,
+the name of the object"
+  `(concatenate 'string ,object "-"
+                (string-downcase (symbol-name ,direction))
+                ".png"))
 
 (defun make-wall (x y width height)
   (let ((wall (make-instance 'wall)))
