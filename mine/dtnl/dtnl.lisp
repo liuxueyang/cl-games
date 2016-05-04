@@ -12,6 +12,8 @@
 
 ;; useful functions
 (defun units (n) (* *unit* n))
+(defmacro mac (expression)
+  `(pprint (macroexpand-1 ',expression)))
 
 ;; resources
 (defresource "unknown-flower.wav" :volume 20)
@@ -211,25 +213,25 @@
                                :heading (direction-heading direction))
                 x y))))
 
+(defmacro choose-image (var object heading)
+  "var is the variable to set, object is the object name of
+string type, heading is the object slot."
+  `(setf ,var
+         (direction-2-image-name (heading-direction ,heading)
+                                 ,object)))
+
+(defmacro direction-2-image-name (direction object)
+  "direction is a keyword such as :up, :down,
+object is an string, the name of the object"
+  `(concatenate 'string ,object "-"
+                (string-downcase (symbol-name ,direction))
+                ".png"))
+
 (defun choose-bullet-image (heading)
   (choose-image *bullet-image* "bullet" heading))
 
 (defun choose-tom-bullet-image (heading)
   (choose-image *tom-bullet-image* "tom-bullet" heading))
-
-(defmacro choose-image (var object heading)
-  "var is the variable to set, object is the object name of
-string type, heading is the object slot."
-  `(setf ,var
-         ,(direction-2-image-name (heading-direction heading)
-                                  object)))
-
-(defmacro direction-2-image-name (direction object)
-  "direction is a keyword, object is an string,
-the name of the object"
-  `(concatenate 'string ,object "-"
-                (string-downcase (symbol-name ,direction))
-                ".png"))
 
 (defun make-wall (x y width height)
   (let ((wall (make-instance 'wall)))
