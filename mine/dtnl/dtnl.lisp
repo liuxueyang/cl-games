@@ -29,7 +29,7 @@
 
 ;; class definitions
 (defclass world (buffer)
-  ((background-image :initform *play-ground-image*)
+  ((background-color :initform "black")
    (width :initform *width*)
    (height :initform *height*)
    (eva :initform (make-instance 'eva))))
@@ -44,6 +44,8 @@
 (defclass bullet (node)
   ((image :initform *bullet-image*)
    (speed :initform 14)
+   (width :initform 10)
+   (height :initform 10)
    (heading :initform nil
             :initarg :heading)
    (frame-clock :initform 100)))
@@ -51,8 +53,8 @@
 (defclass tom-bullet (node)
   ( ;; (image :initform *tom-bullet-image*)
    (speed :initform 7)
-   (width :initform 7)
-   (height :initform 7)
+   (width :initform 10)
+   (height :initform 10)
    (color :initform "white")
    (heading :initform (nth (random (length *directions*))
                            *directions*)
@@ -61,6 +63,8 @@
 (defclass eva (node)
   ((image :initform *eva-image*)
    (speed :initform 0)
+   (width :initform 30)
+   (height :initform 40)
    (heading :initform (direction-heading :down))))
 
 (defclass wall (node)
@@ -114,6 +118,22 @@
 (defmethod update ((tom-bullet tom-bullet))
   (with-slots (heading speed) tom-bullet
     (move tom-bullet heading speed)))
+
+(defmethod draw ((tom-bullet tom-bullet))
+  (with-slots (x y width height heading) tom-bullet
+    (draw-textured-rectangle-*
+     x y 0 width height
+     (find-texture "tom-bullet-down.png")
+     ;; adjust angle to normalize for up-pointing sprites 
+     :angle (+ 90 (heading-degrees heading)))))
+
+(defmethod draw ((bullet bullet))
+  (with-slots (x y width height heading) bullet
+    (draw-textured-rectangle-*
+     x y 0 width height
+     (find-texture "tom-bullet-down.png")
+     ;; adjust angle to normalize for up-pointing sprites 
+     :angle (+ 90 (heading-degrees heading)))))
 
 (defmethod update ((tom tom))
   (percent-of-time 1
