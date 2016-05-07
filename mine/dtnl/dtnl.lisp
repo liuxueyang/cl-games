@@ -35,8 +35,10 @@
    (eva :initform (make-instance 'eva))))
 
 (defclass tom (node)
-  ((image :initform *tom-image*)
+  ( ;; (image :initform *tom-image*)
    (speed :initform 1)
+   (width :initform 10)
+   (height :initform 10)
    (heading :initform (direction-heading
                        (random-choose *directions*))
             :initarg :heading)))
@@ -61,10 +63,11 @@
             :initarg :heading)))
 
 (defclass eva (node)
-  ((image :initform *eva-image*)
+  ( ;; (image :initform *eva-image*)
    (speed :initform 0)
-   (width :initform 30)
-   (height :initform 40)
+   (width :initform 20)
+   (height :initform 10)
+   (color :initform "green")
    (heading :initform (direction-heading :down))))
 
 (defclass wall (node)
@@ -78,10 +81,16 @@
 ;; update method of classes.
 
 (defmethod update ((eva eva))
-  (with-slots (heading speed x y) eva
+  (with-slots (heading speed x y height width) eva
     (let ((head (find-direction)))
       (when head
         (setf speed 5)
+        (if (or (equal head :right)
+                (equal head :left))
+            (progn (setf height 20)
+                   (setf width 10))
+            (progn (setf height 10)
+                   (setf width 20)))
         (setf heading (direction-heading head))
         (move eva heading speed))))
   (fire-bullet eva))
@@ -173,6 +182,21 @@
   (play-sample "bip.wav")
   (destroy bullet1)
   (destroy bullet2))
+
+(defmethod collide ((bullet bullet)
+                    (eva eva))
+  (play-sample "bip.wav")
+  (destroy bullet))
+
+(defmethod collide ((tom-bullet tom-bullet)
+                    (eva eva))
+  (play-sample "bip.wav")
+  (destroy tom-bullet))
+
+(defmethod collide ((tom tom)
+                    (eva eva))
+  (play-sample "bip.wav")
+  (destroy tom))
 
 ;; (defmethod collide ((eva eva)
 ;;                     (bullet bullet))
@@ -326,7 +350,7 @@ object is an string, the name of the object"
     (open-project :dtnl)
     (index-all-images)
     (index-pending-resources)
-    (play-sample *bgm*)
+    ;; (play-sample *bgm*)
     (let ((world (make-instance 'world)))
       (switch-to-buffer world)
       (start-game world))))
