@@ -55,8 +55,8 @@
 (defclass tom-bullet (node)
   ( ;; (image :initform *tom-bullet-image*)
    (speed :initform 7)
-   (width :initform 10)
-   (height :initform 10)
+   (width :initform (1+ (random 15)))
+   (height :initform (1+ (random 10)))
    (color :initform "white")
    (heading :initform (nth (random (length *directions*))
                            *directions*)
@@ -152,7 +152,10 @@
     (percent-of-time 0.5
                      (setf heading
                            (direction-heading
-                            (random-choose *directions*))))))
+                            (nth (random 1)
+                                 '(:right :left))
+                            ;; (random-choose *directions*)
+                            )))))
 
 ;; ====================
 
@@ -308,7 +311,9 @@ object is an string, the name of the object"
         (let ((tom (make-instance 'tom)))
           (move-to tom
                    (random (- *width* (units 2)))
-                   (random (- *height* (units 2))))
+                   (units 4)
+                   ;; (random (- *height* (units 2)))
+                   )
           (insert tom)))
     (current-buffer)))
 
