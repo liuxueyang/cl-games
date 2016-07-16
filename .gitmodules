@@ -22,3 +22,6 @@
 [submodule "others/wizl0rd"]
 	path = others/wizl0rd
 	url = https://gitlab.com/dto/wizl0rd.git
+[submodule "others/cepl"]
+	path = others/cepl
+	url = https://github.com/cbaggers/cepl
