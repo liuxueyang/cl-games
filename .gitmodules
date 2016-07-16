@@ -6,7 +6,7 @@
 	url = https://gitlab.com/dto/2fr0g.git
 [submodule "others/xelf"]
 	path = others/xelf
-	url = https://gitlab.com/dto/xelf.git
+	url = http://gitlab.com/dto/xelf.git
 [submodule "others/3x0ng"]
 	path = others/3x0ng
 	url = https://gitlab.com/dto/3x0ng.git
